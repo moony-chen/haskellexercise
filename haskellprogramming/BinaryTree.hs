@@ -1,5 +1,7 @@
 module BinaryTree where
 
+import Chapter12
+
 data BinaryTree a =
       Leaf
     | Node (BinaryTree a) a (BinaryTree a)
@@ -81,3 +83,16 @@ mapTreeH :: Ord b => (a -> b) -> a -> BinaryTree b -> BinaryTree b
 mapTreeH f a bt = insert' (f a) bt
 
 -- mapTreeH f a Leaf = Node Leaf (f a) Leaf
+
+unfold :: (a -> Maybe (a,b,a)) -> a -> BinaryTree b
+unfold f a0 
+    | isNothing (f a0) = Leaf
+    | otherwise = let Just (a1, b0, a2) = f a0 in 
+                        Node (unfold f a1) b0 (unfold f a2)
+
+treeBuild :: Integer -> BinaryTree Integer
+treeBuild n = unfold (f n) 0 where
+        f n i
+            | n <= 0 = Nothing
+            | i >= n = Nothing
+            | otherwise = Just (i+1, i, i+1)

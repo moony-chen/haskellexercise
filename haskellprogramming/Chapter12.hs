@@ -192,3 +192,19 @@ eitherMaybe'' :: (b -> c) -> Either a b -> Maybe c
 eitherMaybe'' f  = either' f' f'' where 
                     f' _ = Nothing
                     f'' = Just . f
+
+
+
+myIterate :: (a -> a) -> a -> [a]
+myIterate f x = x : myIterate f (f x)
+
+
+myUnfoldr :: (b -> Maybe (a, b)) -> b -> [a]
+myUnfoldr f b
+    | isNothing (f b) = []
+    | otherwise = let Just (a1, b1) = f b in
+                    a1 : myUnfoldr f b1
+
+betterIterate :: (a -> a) -> a -> [a]
+betterIterate f x = myUnfoldr g x where
+                        g x = Just (x, (f x))
