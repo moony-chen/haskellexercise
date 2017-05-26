@@ -38,3 +38,16 @@ vcount :: Int -> Char -> Int
 vcount o c
     | alphabet c = o + 1
     | otherwise = o
+
+unVigenère :: String -> String -> String
+unVigenère [] words = words
+unVigenère [a] words = words
+unVigenère key words = let   distance0 = head key
+                             numbering = tail $ scanl vcount 0 words 
+                             mappedtokey = zipWith zipper words numbering where
+                                zipper :: Char -> Int -> Char
+                                zipper c n  
+                                    | alphabet c = key !! mod (n - 1) (length key) 
+                                    | otherwise = c  
+                             mappedpos = map (negate . (distance distance0)) mappedtokey
+                         in zipWith movChar mappedpos words 
