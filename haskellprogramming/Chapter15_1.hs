@@ -140,6 +140,9 @@ newtype Combine a b = Combine { unCombine :: (a -> b) }
 instance (Semigroup b) => Semigroup (Combine a b) where
     Combine g <> Combine h = Combine $ \x -> g x <> h x
 
+-- instance CoArbitrary (Combine a b) where
+--     coarbitrary = 
+
 --------------------------------------
 newtype Comp a = Comp { unComp :: (a -> a) }
 
