@@ -199,6 +199,13 @@ instance Functor Possibly where
 
 ------------------------
 
+-- newtype Mu f = InF { outF :: f (Mu f) }
+--
+-- instance Functor Mu where
+--   fmap = undefined
+
+------------------
+
 data Quant a b =
     Finance
     | Desk a
@@ -206,15 +213,15 @@ data Quant a b =
 
 instance Functor (Quant a) where
     fmap f (Bloor b) = Bloor $ f b
-    fmap _ Finance = Finance 
-    fmap _ (Desk a) = Desk a 
+    fmap _ Finance = Finance
+    fmap _ (Desk a) = Desk a
 
 -----------------------
 
 data K a b = K a deriving (Eq, Show)
 
 instance Functor (K a) where
-    fmap _ (K a) = K a  
+    fmap _ (K a) = K a
 
 -----------------------
 
@@ -236,7 +243,7 @@ data EvilGoateeConst a b =
     GoatyConst b
 
 instance Functor (EvilGoateeConst a) where
-    fmap f (GoatyConst b) = GoatyConst $ f b 
+    fmap f (GoatyConst b) = GoatyConst $ f b
 
 -------------------
 
@@ -244,7 +251,7 @@ data LiftItOut f a =
     LiftItOut (f a)
 
 instance Functor f => Functor (LiftItOut f) where
-    fmap f (LiftItOut fa)  = LiftItOut $ fmap f fa 
+    fmap f (LiftItOut fa)  = LiftItOut $ fmap f fa
 
 -------------------
 
@@ -303,7 +310,7 @@ instance Functor TalkToMe where
     fmap _ Halt = Halt
     fmap f (Print s a) = Print s (f a)
     fmap f (Read g) =  Read $ fmap f g
- 
+
 main :: IO ()
 main = do
     putStr "replaceWithP' lms: "
@@ -326,14 +333,14 @@ main = do
     quickCheck (functorIdentity :: Identity Int -> Bool)
     quickCheck (functorCompose' :: IntIdentity)
     quickCheck (functorIdentity :: Pair Int -> Bool)
-    quickCheck (functorCompose' :: IntPair)    
+    quickCheck (functorCompose' :: IntPair)
     quickCheck (functorIdentity :: Two String Int -> Bool)
-    quickCheck (functorCompose' :: IntTwo)    
+    quickCheck (functorCompose' :: IntTwo)
     quickCheck (functorIdentity :: Three String String Int -> Bool)
-    quickCheck (functorCompose' :: IntThree)    
+    quickCheck (functorCompose' :: IntThree)
     quickCheck (functorIdentity :: Three' String Int -> Bool)
-    quickCheck (functorCompose' :: IntThree')  
+    quickCheck (functorCompose' :: IntThree')
     quickCheck (functorIdentity :: Four String Int String Int -> Bool)
-    quickCheck (functorCompose' :: IntFour)    
+    quickCheck (functorCompose' :: IntFour)
     quickCheck (functorIdentity :: Four' String Int -> Bool)
     quickCheck (functorCompose' :: IntFour')
