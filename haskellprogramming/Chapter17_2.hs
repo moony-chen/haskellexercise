@@ -72,6 +72,11 @@ instance Applicative List
     _ <*> Nil = Nil
     Cons f fs <*> vs = fmap f vs `append` (fs <*> vs)
 
+instance Eq a => EqProp (List a) where
+  xs =-= ys = xs' `eq` ys'
+    where xs' = take' 3000 xs
+          ys' = take' 3000 ys
+
 newtype ZipList' a =
   ZipList' (List a)
   deriving (Eq, Show)
@@ -93,7 +98,7 @@ instance Functor ZipList' where
   fmap f (ZipList' xs) = ZipList' $ fmap f xs
 
 instance Applicative ZipList' where
-  pure = ZipList' . pure
+  pure = repeat''
   ZipList' Nil <*> _ = ZipList' Nil
   _ <*> ZipList' Nil = ZipList' Nil
   ZipList' (Cons f Nil) <*> ZipList' (Cons v vs) = ZipList' $ Cons (f v) Nil
@@ -101,7 +106,11 @@ instance Applicative ZipList' where
   ZipList' (Cons f fs) <*> ZipList' (Cons v vs) = ZipList' $ Cons (f v) fvs
     where ZipList' fvs = ZipList' fs <*> ZipList' vs
 
+instance Arbitrary a => Arbitrary (ZipList' a) where
+  arbitrary =  ZipList' <$> sized arbitraryList
+
 main :: IO ()
 main = do
-  quickBatch (monoid Twoo)
-  -- quickBatch (functor (undefined :: List (Int, String, String)))
+  -- quickBatch (monoid Twoo)
+  quickBatch (applicative (undefined :: List (Int, String, String)))
+  quickBatch (applicative (undefined :: ZipList' (Int, String, String)))
