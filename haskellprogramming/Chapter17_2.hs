@@ -6,6 +6,7 @@ stack --resolver lts-8.15 ghci --package QuickCheck
 module BadMonoid where
 
 import Data.Monoid
+import Control.Applicative
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
@@ -110,8 +111,12 @@ instance Applicative ZipList' where
 instance Arbitrary a => Arbitrary (ZipList' a) where
   arbitrary =  ZipList' <$> sized arbitraryList
 
+instance Monoid a => Monoid (ZipList' a) where
+  mempty = pure mempty
+  mappend = liftA2 mappend
+
 main :: IO ()
 main = do
   -- quickBatch (monoid Twoo)
-  quickBatch (applicative (undefined :: List (Int, String, String)))
+  quickBatch (monoid (undefined :: ZipList' (Sum Int)))
   quickBatch (applicative (undefined :: ZipList' (Int, String, String)))
