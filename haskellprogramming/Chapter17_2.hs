@@ -52,6 +52,7 @@ take' 0 _ = Nil
 take' _ Nil = Nil
 take' n (Cons a as) = Cons a (take' (n - 1) as)
 
+-- http://codingstruggles.com/haskell/arbitrary-length-lists-quickcheck.html
 arbitraryList :: Arbitrary a => Int -> Gen (List a)
 arbitraryList m
     | m == 0 = return Nil
