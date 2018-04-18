@@ -111,12 +111,42 @@ instance Applicative ZipList' where
 instance Arbitrary a => Arbitrary (ZipList' a) where
   arbitrary =  ZipList' <$> sized arbitraryList
 
+instance Arbitrary a => Arbitrary (Sum a) where
+  arbitrary = Sum <$> arbitrary
+
 instance Monoid a => Monoid (ZipList' a) where
   mempty = pure mempty
   mappend = liftA2 mappend
+
+
+data Validation e a =
+    Failure' e
+  | Success' a
+  deriving (Eq, Show)
+
+-- same as Either
+instance Functor (Validation e) where
+  fmap _ (Failure' e) = Failure' e
+  fmap f (Success' a) = Success' $ f a
+-- This is different
+instance Monoid e => Applicative (Validation e) where
+  pure = Success'
+  Failure' e <*> Failure' e' = Failure' $ e <> e'
+  Failure' e <*> _ = Failure' e
+  _ <*> Failure' e = Failure' e
+  Success' f <*> Success' v = Success' $ f v
+
+instance (Arbitrary a, Arbitrary e) => Arbitrary (Validation e a) where
+  arbitrary =
+    frequency [ (1, Failure' <$> arbitrary)
+              , (1, Success' <$> arbitrary) ]
+
+instance (Eq e, Eq a) => EqProp (Validation e a) where
+  a =-= b = eq a b
 
 main :: IO ()
 main = do
   -- quickBatch (monoid Twoo)
   quickBatch (monoid (undefined :: ZipList' (Sum Int)))
+  quickBatch (applicative (undefined :: Validation String (Int, String, String)))
   quickBatch (applicative (undefined :: ZipList' (Int, String, String)))
