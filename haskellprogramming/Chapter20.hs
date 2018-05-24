@@ -45,3 +45,8 @@ instance Ord a => Monoid (Min a) where
 
 minimum' :: (Foldable t, Ord a) => t a -> Maybe a
 minimum' xs = getMin $ foldMap (Min . Just) xs
+
+null' :: (Foldable t) => t a -> Bool
+null' xs = isNothing $ getFirst $ foldMap (First . Just) xs
+  where isNothing Nothing = True
+        isNothing (Just a) = False
