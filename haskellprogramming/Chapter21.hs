@@ -53,7 +53,29 @@ instance Eq a => EqProp (Identity a) where
 instance Traversable Identity where
   traverse f (Identity a) = Identity <$> f a
 
+-----------------------------------
+
+newtype Constant a b = Constant { getConstant :: a } deriving (Eq, Ord, Show)
+
+instance Functor (Constant a) where
+  fmap f (Constant a) = Constant a
+
+instance Foldable (Constant a) where
+  foldMap _ _ = mempty
+
+instance Arbitrary a => Arbitrary (Constant a b) where
+  arbitrary = do
+    a <- arbitrary
+    return $ Constant a
+
+instance Eq a => EqProp (Constant a b) where
+  a =-= b = eq a b
+
+instance Traversable (Constant a) where
+  traverse _ (Constant a) = pure $ Constant a
 
 main = do
-let trigger = undefined :: Identity (String, Int, [Int])
-quickBatch (traversable trigger)
+let triggerIdentity = undefined :: Identity (String, Int, [Int])
+let triggerConstant = undefined :: Constant Int (String, Int, [Int])
+quickBatch (traversable triggerIdentity)
+quickBatch (traversable triggerConstant)
