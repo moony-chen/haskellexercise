@@ -134,10 +134,122 @@ instance Traversable List where
   traverse _ Nil = pure Nil
   traverse f (Cons a as) = liftA2 Cons (f a) (traverse f as)
 
+---------------------------------------------
 
+data Three a b c = Three a b c deriving (Eq, Show)
+
+instance Functor (Three a b) where
+  fmap f (Three a b c) = Three a b $ f c
+
+instance Foldable (Three a b) where
+  foldMap f (Three a b c) = f c
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    return $ Three a b c
+
+instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
+  a =-= b = eq a b
+
+instance Traversable (Three a b) where
+  traverse f (Three a b c) = Three a b <$> f c
+
+
+--------------------------------------------
+
+data Three' a b = Three' a b b deriving (Eq, Show)
+
+
+instance Functor (Three' a) where
+  fmap f (Three' a b c) = Three' a (f b) (f c)
+
+instance Foldable (Three' a) where
+  foldMap f (Three' a b c) = f b <> (f c)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Three' a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    b' <- arbitrary
+    return $ Three' a b b'
+
+instance (Eq a, Eq b) => EqProp (Three' a b) where
+  a =-= b = eq a b
+
+instance Traversable (Three' a) where
+  traverse f (Three' a b c) = Three' a <$> (f b) <*> (f c)
+
+
+-------------------------------------------
+
+data S n a = S (n a) a deriving (Eq, Show)
+
+instance Functor n => Functor (S n) where
+  fmap f (S n a) = S (fmap f n) $ f a
+
+instance Foldable n => Foldable (S n) where
+  foldMap f (S n a) = foldMap f n <> (f a)
+
+
+instance (Arbitrary a, Arbitrary (n a)) => Arbitrary (S n a) where
+    arbitrary = S <$> arbitrary <*> arbitrary
+
+instance (Eq a, Eq (n a)) => EqProp (S n a) where (=-=) = eq
+
+
+instance Traversable n => Traversable (S n) where
+  traverse f (S n a) = S <$> traverse f n <*> f a
+
+------------------------------
+
+data Tree a = Empty
+  | Leaf a
+  | Node (Tree a) a (Tree a) deriving (Eq, Show)
+
+instance Functor Tree where
+  fmap _ Empty = Empty
+  fmap f (Leaf a) = Leaf $ f a
+  fmap f (Node l a r) = Node (fmap f l) (f a) (fmap f r)
+
+  -- foldMap is a bit easier and looks more natural,
+  -- but you can do foldr too for extra credit.
+instance Foldable Tree where
+  foldMap _ Empty = mempty
+  foldMap f (Leaf a) = f a
+  foldMap f (Node l a r) = (foldMap f l) <> (f a) <> (foldMap f r)
+
+arbitraryLevelTree :: Arbitrary a => Int -> Int -> Gen (Tree a)
+arbitraryLevelTree l r
+    | l < 0 && r < 0 = return Empty
+    | l == 0 && r == 0 = Leaf <$> arbitrary
+    | l > 6 = arbitraryLevelTree 6 r
+    | r > 6 = arbitraryLevelTree l 6
+    | otherwise = Node <$> arbitraryLevelTree (l-1) (r-1) <*> arbitrary <*> arbitraryLevelTree (l-1) (r-1)
+
+instance Arbitrary a => Arbitrary (Tree a) where
+  arbitrary = do
+    l <- sized pure
+    r <- sized pure
+    arbitraryLevelTree l r
+
+
+instance Eq a => EqProp (Tree a) where (=-=) = eq
+
+
+instance Traversable Tree where
+  traverse _ Empty = pure Empty
+  traverse f (Leaf a) = Leaf <$> f a
+  traverse f (Node l a r) = Node <$> (traverse f l) <*> (f a) <*> (traverse f r)
 
 main = do
 quickBatch (traversable (undefined :: Identity (String, Int, [Int])))
 quickBatch (traversable (undefined :: Constant Int (String, Int, [Int])))
 quickBatch (traversable (undefined :: Optional (String, Int, [Int])))
 quickBatch (traversable (undefined :: List (Int, String, String)))
+quickBatch (traversable (undefined :: Three Int String (Int, String, String)))
+quickBatch (traversable (undefined :: Three' Int (Int, String, String)))
+quickBatch (traversable (undefined :: S Maybe (Int, String, String)))
+quickBatch (traversable (undefined :: Tree (Int, String, String)))
